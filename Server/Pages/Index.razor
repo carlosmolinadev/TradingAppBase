@@ -1,0 +1,18 @@
+﻿@page "/"
+@using Application.Requests;
+@inject TradeCommand tradeCommand
+
+
+
+<TradingViewWidget />
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="ClickTest">Primary</MudButton>
+
+@code{
+    private async void ClickTest()
+    {
+        var tradeRequest = new TradeRequest();
+        tradeRequest.Trades.Add(new Domain.Entities.Trade() { AccountId = 1, Attempt = 0, CreatedDate = DateTime.Today, Exchange = Domain.Entities.Exchange.Binance, Id = 0, LateEntry = false, IsPercentage = false, Symbol = "BTCUSDT", TradeBot = Domain.Entities.TradeBot.FakeBreakout });
+        await tradeCommand.RegisterTrade(tradeRequest);
+    }
+}
