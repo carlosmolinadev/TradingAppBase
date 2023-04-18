@@ -9,7 +9,7 @@ namespace Application.Requests
 {
     public class TradeRequest
     {
-        public ICollection<Trade>? Trades { get; set; }
-        
+        public Trade? Trade { get; set; }
+        public TradeBot TradeBot { get; set; }
     }
 }

@@ -12,7 +12,8 @@
     private async void ClickTest()
     {
         var tradeRequest = new TradeRequest();
-        tradeRequest.Trades.Add(new Domain.Entities.Trade() { AccountId = 1, Attempt = 0, CreatedDate = DateTime.Today, Exchange = Domain.Entities.Exchange.Binance, Id = 0, LateEntry = false, IsPercentage = false, Symbol = "BTCUSDT", TradeBot = Domain.Entities.TradeBot.FakeBreakout });
+        tradeRequest.Trade = new Domain.Entities.Trade() { AccountId = 1, Attempt = 0, CreatedDate = DateTime.Today, Id = 0, LateEntry = false, PercentageEntry = false, Symbol = "BTCUSDT"};
+        tradeRequest.TradeBot = Domain.Entities.TradeBot.FakeBreakout;
         await tradeCommand.RegisterTrade(tradeRequest);
     }
 }

@@ -4,6 +4,7 @@ using Application.Models.Persistance;
 using Application.Requests;
 using Application.Responses;
 using Domain.Entities;
+using System.Diagnostics;
 
 namespace Application.Features.Commands
 {
@@ -26,30 +27,19 @@ namespace Application.Features.Commands
 
             try
             {
-                if(tradeRequest.Trades is not null && tradeRequest.Trades.Any())
+                using (_unitOfWork.BeginTransactionAsync())
                 {
-                    using (_unitOfWork.BeginTransactionAsync())
+                    if(tradeRequest.Trade is not null)
                     {
-                        foreach (var trade in tradeRequest.Trades)
-                        {
-                            trade.Id = await _tradeRepository.AddAsync(trade);
-                            if(trade.Id > 0 && trade.Orders.Any())
-                            {
-                                foreach (var order in trade.Orders)
-                                {
-                                    order.Id = await _orderRepository.AddAsync(order);
-                                }
-                                
-                            }
-                            response.Trades.Append(trade);
-                        }
+                        tradeRequest.Trade.Id = await _tradeRepository.AddAsync(tradeRequest.Trade);
 
                         await _unitOfWork.CommitAsync();
-                        
+
                         response.Success = true;
                     }
+
                 }
-                
+
             }
             catch (Exception e)
             {

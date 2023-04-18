@@ -5,21 +5,21 @@ namespace Domain.Entities
     public class Trade
     {
         public int Id { get; set; }
-        public TradeBot TradeBot { get; set; }
-        public bool LateEntry { get; set; }
-        public int Attempt { get; set; }
-        public string? Symbol { get; set; }
-        public bool IsPercentage { get; set; }
         public decimal RiskReward { get; set; }
+        public bool LateEntry { get; set; }
         public bool CandleCloseEntry { get; set; }
-        public decimal StopLossOrder { get; set; }
-        public ICollection<TakeProfit>? TakeProfitOrders { get; set; }
+        public int Attempt { get; set; }
+        public bool PercentageEntry { get; set; }
+        public string? Symbol { get; set; }
         public int AccountId { get; set; }
         public DateTime? CreatedDate { get; set; }
 
         [NotMapped]
-        public ICollection<TradeOrder>? Orders { get; set; }
-
+        public IList<TradeOrder>? Orders { get; set; } = new List<TradeOrder>();
+        [NotMapped]
+        public IList<TakeProfit> TakeProfitOrders { get; set; } = new List<TakeProfit>();
+        [NotMapped]
+        public decimal StopLossOrder { get; set; }
     }
 
     public class TakeProfit

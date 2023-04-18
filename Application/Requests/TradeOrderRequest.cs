@@ -10,7 +10,7 @@ namespace Application.Requests
     public class TradeOrderRequest : BaseRequest
     {
         public Exchange Exchange { get; set; }
-        public Derivate Derivate { get; set; }
+        public string? Derivate { get; set; }
         public ICollection<TradeOrder> Orders { get; set; }
 
     }

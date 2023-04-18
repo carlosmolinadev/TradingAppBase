@@ -23,24 +23,10 @@
 
     public enum Exchange
     {
-        Binance,
-        BingX,
-        Okex
-    }
-
-    public enum Derivate
-    {
-        Spot,
-        Futures,
-        Coin
-    }
-
-    public enum OrderCategory
-    {
-        Activation,
-        StopLoss,
-        TakeProfit,
-        TrailingStop
+        Unknown = 0,
+        Binance = 1,
+        BingX = 2,
+        Okex = 3
     }
 
     public enum OrderType

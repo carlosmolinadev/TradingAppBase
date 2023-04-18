@@ -1,25 +1,30 @@
 CREATE TABLE order_side(
     id int PRIMARY KEY NOT NULL,
-    side varchar(30) NOT NULL
+    name varchar(30) NOT NULL
 );
 
 CREATE TABLE order_type(
     id int PRIMARY KEY NOT NULL,
-    type varchar(30) NOT NULL
+    name varchar(30) NOT NULL
 );
 
 CREATE TABLE order_status(
   id int PRIMARY KEY NOT NULL,
-  status varchar(30) NOT NULL
+  name varchar(30) NOT NULL
+);
+
+CREATE TABLE exchange(
+    id int PRIMARY KEY NOT NULL,
+    name varchar(30) NOT NULL,
 );
 
 CREATE TABLE account(
     id serial PRIMARY KEY NOT NULL,
-    derivate varchar(30) NOT NULL,
     balance NUMERIC(10,4) NOT NULL,
-    risk_per_trade NUMERIC(5,2) NOT NULL,
+    risk_percentage NUMERIC(5,2) NOT NULL,
     currency varchar(25),
-    exchange varchar(25)
+    derivate varchar(30) NOT NULL,
+	exchange_id int NOT NULL 
 );
 
 CREATE TABLE trade(
@@ -28,10 +33,8 @@ CREATE TABLE trade(
   late_entry int NOT NULL,
   candle_close_entry boolean,
   attempt int NOT NULL,
-  percentage_parameters boolean,
+  percentage_entry boolean,
   symbol varchar(25),
-  stop_loss NUMERIC(10,4),
-  take_profit NUMERIC(10,4),
   account_id int NOT null
 );
 
@@ -40,45 +43,37 @@ CREATE TABLE trade_order(
 	quantity NUMERIC(10,4) NOT NULL,
 	activation_price NUMERIC(10,4),
 	filled_price NUMERIC(10,4),
-	symbol varchar(25),
 	fee NUMERIC(10,4),
 	realized_profit  NUMERIC(10,4),
 	created_date timestamp,
 	closed_date timestamp,
-	parent_order int,
-	order_side int NOT null,
-	order_type int NOT null,
-	order_status int NOT null,
+	parent_id int,
+	exchange_transaction bigint,
+	side_id int NOT null,
+	type_id int NOT null,
+	status_id int NOT null,
     trade_id int NOT null
-);
-
-CREATE TABLE trade_error(
-  id serial PRIMARY KEY NOT NULL,
-  created_date timestamp NOT NULL,
-  message varchar(100),
-  trade_id int NOT null
 );
 
 ALTER TABLE trade ADD CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES account(id);
 ALTER TABLE trade_order ADD CONSTRAINT fk_trade_id FOREIGN KEY (trade_id) REFERENCES trade(id);
+ALTER TABLE trade_order ADD CONSTRAINT fk_side_id FOREIGN KEY (side_id) REFERENCES order_side(id);
+ALTER TABLE trade_order ADD CONSTRAINT fk_type_id FOREIGN KEY (type_id) REFERENCES order_type(id);
+ALTER TABLE trade_order ADD CONSTRAINT fk_status_id FOREIGN KEY (status_id) REFERENCES order_status(id);
 ALTER TABLE trade_error ADD CONSTRAINT fk_trade_id FOREIGN KEY (trade_id) REFERENCES trade(id);
-ALTER TABLE account ADD unique (id, derivate, exchange);
-
-
-
-
-ALTER TABLE trade DROP CONSTRAINT fk_account_id;
-ALTER TABLE trade_order DROP CONSTRAINT fk_trade_id;
-ALTER TABLE trade_error DROP CONSTRAINT fk_trade_id;
+ALTER TABLE account ADD unique (derivate, exchange);
+ALTER TABLE account ADD CONSTRAINT fk_exchange_id FOREIGN KEY (exchange_id) REFERENCES trade(id);
 
 drop table exchange;
-drop table account;
-drop table trade;
-drop table trade_order;
 drop table order_side;
 drop table order_type;
 drop table order_status;
-drop table trade_error
+drop table trade_order;
+drop table trade_error;
+drop table trade;
+drop table account;
+
+
 
 SELECT *
 FROM information_schema.columns
