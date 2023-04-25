@@ -21,7 +21,7 @@ namespace Application.Features.Queries
         public async Task<TradeResponse> GetTradeByIdAsync(int tradeId)
         {
             var response = new TradeResponse();
-            var trade = await _tradeRepository.GetByIdAsync(tradeId);
+            var trade = await _tradeRepository.SelectByIdAsync(tradeId);
             if(trade is not null)
             {
                 response.Trades =  new List<Trade>
@@ -37,7 +37,7 @@ namespace Application.Features.Queries
             var response = new TradeOrderResponse();
             try
             {
-                var order = await _orderRepository.GetByIdAsync(tradeId);
+                var order = await _orderRepository.SelectByIdAsync(tradeId);
                 if (order is not null)
                 {
                     response.TradeOrder = new List<TradeOrder>
@@ -60,17 +60,12 @@ namespace Application.Features.Queries
 
             try
             {
-                var trade = await _tradeRepository.GetByIdAsync(tradeId);
+                var trade = await _tradeRepository.SelectByIdAsync(tradeId);
                 if (trade != null)
                 {
                     var tradeCondition = new QueryCondition { Column = "trade_id", Operator = "=", Value = trade.Id.ToString() };
                     orderFilter.Condition.Add(tradeCondition);
-                    var orders = await _orderRepository.GetFilteredAsync(orderFilter);
-                    trade.Orders = orders;
-                    response.Trades = new List<Trade>
-                    {
-                        trade
-                    }.AsReadOnly();
+                    var orders = await _orderRepository.SelectFilteredAsync(orderFilter);
                 }
                 response.Success = true;
             }
@@ -95,7 +90,7 @@ namespace Application.Features.Queries
                         }
                 };
 
-                var orders = await _orderRepository.GetFilteredAsync(filter);
+                var orders = await _orderRepository.SelectFilteredAsync(filter);
 
                 response.Success = true;
             }

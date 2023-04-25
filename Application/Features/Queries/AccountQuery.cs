@@ -17,7 +17,7 @@ namespace Application.Features.Queries
             var accountResponse = new AccountResponse();
             try
             {
-                var account = await _accountRepo.GetByIdAsync(accountId);
+                var account = await _accountRepo.SelectByIdAsync(accountId);
 
                 if (account != null)
                 {

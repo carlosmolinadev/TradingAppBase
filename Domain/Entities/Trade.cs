@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
@@ -6,12 +7,13 @@ namespace Domain.Entities
     {
         public int Id { get; set; }
         public decimal RiskReward { get; set; }
-        public bool LateEntry { get; set; }
+        public int LateEntry { get; set; }
         public bool CandleCloseEntry { get; set; }
         public int Attempt { get; set; }
         public bool PercentageEntry { get; set; }
         public string? Symbol { get; set; }
         public int AccountId { get; set; }
+        [NotMapped]
         public DateTime? CreatedDate { get; set; }
 
         [NotMapped]

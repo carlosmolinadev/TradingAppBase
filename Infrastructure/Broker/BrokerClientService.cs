@@ -15,17 +15,17 @@ namespace Infrastructure.Broker
             _binanceClient = binanceClient;
         }
 
-        public async Task<TradeOrderResponse> CreateOrder(Exchange exchange, Derivate derivate, OrderType orderType, OrderParameter orderParameter)
+        public async Task<TradeOrderResponse> CreateOrder(Exchange exchange, string derivate, OrderType orderType, OrderParameter orderParameter)
         {
             var response = new TradeOrderResponse();
             switch (exchange)
             {
                 case Exchange.Binance:
-                    if (derivate == Derivate.Futures)
+                    if (derivate == "FUTURES")
                     {
                         response = await CreateFuturesBinanceOrder(orderType, orderParameter);
                     }
-                    if (derivate == Derivate.Coin)
+                    if (derivate == "COIN")
                     {
                         response = await CreateCoinBinanceOrder(orderType, orderParameter);
                     }

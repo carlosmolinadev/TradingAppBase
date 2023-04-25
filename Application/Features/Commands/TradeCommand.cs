@@ -1,10 +1,12 @@
 ﻿using Application.Contracts.Persistance;
 using Application.Contracts.TradingSystem;
 using Application.Models.Persistance;
+using Application.Profiles.DTOs;
 using Application.Requests;
 using Application.Responses;
 using Domain.Entities;
 using System.Diagnostics;
+using System.Linq.Expressions;
 
 namespace Application.Features.Commands
 {
@@ -20,24 +22,29 @@ namespace Application.Features.Commands
             _orderRepository = orderRepository;
             _unitOfWork = unitOfWork;
         }
+        private struct ExchangeParameter
+        {
+            public int ExchangeId;
+        }
 
+        public struct test
+        {
+            public string another { get; set; }
+        }
         public async Task<TradeResponse> RegisterTrade(TradeRequest tradeRequest)
         {
             var response = new TradeResponse();
-
+            
             try
             {
-                using (_unitOfWork.BeginTransactionAsync())
+                if (tradeRequest.Trade is not null)
                 {
-                    if(tradeRequest.Trade is not null)
-                    {
-                        tradeRequest.Trade.Id = await _tradeRepository.AddAsync(tradeRequest.Trade);
-
-                        await _unitOfWork.CommitAsync();
-
-                        response.Success = true;
-                    }
-
+                    //List<ExchangeDTO> test = new List<ExchangeDTO>();
+                    var res = await _tradeRepository.UpdateAsync(tradeRequest.Trade);
+                    //var test = await _orderRepository.LoadAsync<string, dynamic>("get_customer", null);
+                    //var queryFilter = new QueryFilter("activation_price", "=", "5", 5, 5);
+                    //var result = _orderRepository.GetFilteredAsync(queryFilter);
+                    response.Success = true;
                 }
 
             }
@@ -58,7 +65,7 @@ namespace Application.Features.Commands
                     foreach (var order in tradeOrderRequest.Orders)
                     {
                         
-                        await _orderRepository.AddAsync(order);
+                        await _orderRepository.InsertAsync(order);
                     }
 
                     response.Success = true;

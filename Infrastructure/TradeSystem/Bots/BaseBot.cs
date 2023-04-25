@@ -24,17 +24,17 @@ namespace Infrastructure.TradeSystem.Bots
         protected abstract void SetUpTrade();
 
         protected abstract void AddTrade();
-        public virtual Task<TradeResponse> CancelOrderAsync(Exchange exchange, Derivate derivate, TradeOrder tradeOrder)
+        public virtual Task<TradeResponse> CancelOrderAsync(Exchange exchange, string derivate, TradeOrder tradeOrder)
         {
             throw new NotImplementedException();
         }
 
-        public virtual Task<TradeResponse> PlaceOrderAsync(Exchange exchange, Derivate derivate, TradeOrder tradeOrder)
+        public virtual Task<TradeResponse> PlaceOrderAsync(Exchange exchange, string derivate, TradeOrder tradeOrder)
         {
             throw new NotImplementedException();
         }
 
-        public virtual Task<TradeResponse> UpdateOrderAsync(Exchange exchange, Derivate derivate, TradeOrder tradeOrder)
+        public virtual Task<TradeResponse> UpdateOrderAsync(Exchange exchange, string derivate, TradeOrder tradeOrder)
         {
             throw new NotImplementedException();
         }

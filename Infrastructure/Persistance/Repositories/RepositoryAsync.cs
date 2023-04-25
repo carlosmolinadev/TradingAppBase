@@ -4,15 +4,18 @@ using Dapper;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
-using System.Data.Common;
+using System.Diagnostics;
 using System.Reflection;
+
 
 namespace Infrastructure.Persistance.Repositories
 {
+    
     public class RepositoryAsync<T> : IRepositoryAsync<T> where T : class
     {
         private readonly string _tableName;
         private readonly IUnitOfWork _unitOfWork;
+        
 
         public RepositoryAsync(IUnitOfWork unitOfWork)
         {
@@ -29,7 +32,7 @@ namespace Infrastructure.Persistance.Repositories
             _unitOfWork = unitOfWork;
         }
 
-        public virtual async Task<T> GetByIdAsync(int id)
+        public virtual async Task<T> SelectByIdAsync(int id)
         {
             try
             {
@@ -44,22 +47,7 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        public virtual async Task<T> GetByIdAsync(long id)
-        {
-            try
-            {
-                var sql = ConvertSql($"SELECT * FROM {_tableName} WHERE id = @id");
-                return await _unitOfWork.Connection.QueryFirstOrDefaultAsync<T>(
-                    sql,
-                    new { id });
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public virtual async Task<ICollection<T>> GetAllAsync()
+        public virtual async Task<ICollection<T>> SelectAllAsync()
         {
             try
             {
@@ -73,13 +61,13 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        public async Task<ICollection<T>> GetFilteredAsync(QueryFilter filter)
+        public async Task<ICollection<T>> SelectFilteredAsync(QueryFilter filter)
         {
             // Build the SQL query
             var sql = ConvertSql($"SELECT * FROM {_tableName}");
             var whereClauses = new List<string>();
             var parameters = new DynamicParameters();
-            if (filter.Condition != null)
+            if (filter.Condition.Count > 0)
             {
                 // Add WHERE clauses for each filter condition
                 var i = 0;
@@ -94,16 +82,21 @@ namespace Infrastructure.Persistance.Repositories
             {
                 sql += $" WHERE {string.Join(" AND ", whereClauses)}";
             }
-            if (filter.OrderByColumn != null)
+            if (filter.OrderByColumn.Count > 0)
             {
                 // Add ORDER BY clause for each OrderByColumn
-                var orderByClauses = filter.OrderByColumn.Select(x => $"{x.Column} {x.Direction}");
+                var orderByClauses = filter.OrderByColumn.Select(x => $"{x}");
                 sql += $" ORDER BY {string.Join(", ", orderByClauses)}";
             }
-            if (filter.Limit.HasValue && filter.Offset.HasValue)
+            if (filter.Limit.HasValue)
             {
+                sql += $" LIMIT {filter.Limit}";
                 // Add LIMIT and OFFSET clauses for paging
-                sql += $" LIMIT {filter.Limit} OFFSET {filter.Offset}";
+                if (filter.Offset.HasValue)
+                {
+                    sql += $" OFFSET {filter.Offset}";
+                }
+                 
             }
 
             // Execute the query and return the results
@@ -111,22 +104,23 @@ namespace Infrastructure.Persistance.Repositories
             return result.ToList();
         }
 
-        public virtual async Task<int> AddAsync(T entity)
+        public virtual async Task<T> InsertAsync(T entity)
         {
             try
             {
-                var columns = string.Join(',', GetColumnNames());
-                var values = string.Join(',', GetColumnValues().Select(c => $"@{c}"));
-                var primaryKey = GetPrimaryKeyInfo();
-                var sql = $"INSERT INTO {_tableName} ({columns}) VALUES ({values}) RETURNING id";
+                var p = new DynamicParameters();
+                var properties = GetPropertyInfo();
+                var columns = string.Join(",", properties.Where(x => x.Name != "Id").Select(x => ToSnakeCase(x.Name)));
+                var values = string.Join(",", properties.Where(x => x.Name != "Id").Select(x => $"@{x.Name}"));
 
-                if (primaryKey is not null && primaryKey.PropertyType != typeof(int))
+                foreach (var item in properties)
                 {
-                    sql = $"INSERT INTO {_tableName} ({columns}) VALUES ({values})";
-                    return await _unitOfWork.Connection.ExecuteAsync(sql, entity);
+                    p.Add(item.Name, item.GetValue(entity));
                 }
 
-                return await _unitOfWork.Connection.ExecuteScalarAsync<int>(sql, entity);
+                var sql = $"INSERT INTO {_tableName} ({columns}) VALUES ({values}) RETURNING *";
+
+                return await _unitOfWork.Connection.QueryFirstAsync<T>(sql, p);
             }
             catch (Exception)
             {
@@ -139,7 +133,7 @@ namespace Infrastructure.Persistance.Repositories
             try
             {
                 var primaryKey = GetPrimaryKeyInfo();
-                var updates = string.Join(',', GetColumnNames().Select((c, i) => $"{c} = @{GetColumnValues().ElementAt(i)}"));
+                var updates = string.Join(',', GetPropertyInfo().Select(c => $"{ToSnakeCase(c.Name)} = @{c.Name}"));
                 var sql = $"UPDATE {_tableName} SET {updates} WHERE id = @id";
                 if (primaryKey is not null)
                 {
@@ -173,18 +167,75 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        private IEnumerable<string> GetColumnNames()
+        public virtual async Task<ICollection<U>> LoadAsync<U, P>(string storedProcedure, P parameters)
         {
-            return typeof(T)
-                .GetProperties().Where(p => p.Name != "Id" && !p.CustomAttributes.Any(a => a.AttributeType == typeof(NotMappedAttribute)))
-                .Select(p => ToSnakeCase(p.Name));
+            Type type = typeof(U);
+            FieldInfo[] fields = type.GetFields();
+            var p = new DynamicParameters();
+
+            if (fields.Length > 0)
+            {
+                storedProcedure = $"SELECT {storedProcedure}";
+            }
+            else
+            {
+                storedProcedure = $"SELECT * FROM {storedProcedure}";
+            }
+
+            if (parameters is not null)
+            {
+                PropertyInfo[] properties;
+                properties = parameters.GetType().GetProperties();
+                var attributeClauses = new List<string>();
+
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    attributeClauses.Add($"{ToSnakeCase(properties[i].Name)} := @{properties[i].Name}");
+                    p.Add(properties[i].Name, properties[i].GetValue(parameters));
+                }
+
+                storedProcedure += $"({string.Join(", ", attributeClauses)})";
+            }
+
+            try
+            {
+                var rows = await _unitOfWork.Connection.QueryAsync<U>(storedProcedure, p);
+                return rows.ToList();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        private IEnumerable<string> GetColumnValues()
+        public virtual async Task SaveAsync<P>(string storedProcedure, P parameters)
+        {
+            PropertyInfo[] properties;
+            var p = new DynamicParameters();
+
+            if (parameters is not null)
+            {
+                properties = parameters.GetType().GetProperties();
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    p.Add(ToSnakeCase(properties[i].Name), properties[i].GetValue(parameters));
+                }
+            }
+
+            try
+            {
+                await _unitOfWork.Connection.ExecuteAsync(storedProcedure, p, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private IEnumerable<PropertyInfo> GetPropertyInfo()
         {
             return typeof(T)
-                .GetProperties().Where(p => p.Name != "Id" && !p.CustomAttributes.Any(a => a.AttributeType == typeof(NotMappedAttribute)))
-                .Select(p => p.Name);
+                .GetProperties().Where(p => p.Name != "Id" && !p.CustomAttributes.Any(a => a.AttributeType == typeof(NotMappedAttribute)));
         }
 
         private static string ToSnakeCase(string input)
@@ -220,3 +271,68 @@ namespace Infrastructure.Persistance.Repositories
         }
     }
 }
+
+
+//public virtual async Task<ICollection<U>> CustomLoadAsync<U, P>(string sqlStatement, P parameters, bool isStoredProcedure = false)
+//{
+//    PropertyInfo[] properties;
+//    var p = new DynamicParameters();
+//    var attributeClauses = new List<string>();
+
+//    if (parameters is not null)
+//    {
+//        properties = parameters.GetType().GetProperties();
+
+//        for (int i = 0; i < properties.Length; i++)
+//        {
+//            attributeClauses.Add($"{ToSnakeCase(properties[i].Name)} := @{properties[i].Name}");
+//            p.Add(properties[i].Name, properties[i].GetValue(parameters));
+//        }
+//    }
+
+//    if (isStoredProcedure == true)
+//    {
+//        sqlStatement = $"SELECT {sqlStatement}";
+//        sqlStatement += $"({string.Join(", ", attributeClauses)})";
+//    }
+
+//    try
+//    {
+//        var rows = await _unitOfWork.Connection.QueryAsync<U>(sqlStatement, p);
+//        return rows.ToList();
+//    }
+//    catch (Exception)
+//    {
+//        throw;
+//    }
+//}
+
+//public virtual async Task<int> CustomSaveAsync<P>(string sqlStatement, P parameters, bool isStoredProcedure = false)
+//{
+//    var p = new DynamicParameters();
+//    CommandType commandType = CommandType.Text;
+//    PropertyInfo[] properties;
+
+//    if (parameters is not null)
+//    {
+//        properties = parameters.GetType().GetProperties();
+//        for (int i = 0; i < properties.Length; i++)
+//        {
+//            p.Add(ToSnakeCase(properties[i].Name), properties[i].GetValue(parameters));
+//        }
+//    }
+
+//    if (isStoredProcedure == true)
+//    {
+//        commandType = CommandType.StoredProcedure;
+//    }
+
+//    try
+//    {
+//        return await _unitOfWork.Connection.ExecuteAsync(sqlStatement, p, commandType: commandType);
+//    }
+//    catch (Exception)
+//    {
+//        throw;
+//    }
+//}

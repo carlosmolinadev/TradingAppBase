@@ -12,7 +12,7 @@
     private async void ClickTest()
     {
         var tradeRequest = new TradeRequest();
-        tradeRequest.Trade = new Domain.Entities.Trade() { AccountId = 1, Attempt = 0, CreatedDate = DateTime.Today, Id = 0, LateEntry = false, PercentageEntry = false, Symbol = "BTCUSDT"};
+        tradeRequest.Trade = new Domain.Entities.Trade() { AccountId = 1, Attempt = 0, Id = 6, LateEntry = 1, PercentageEntry = false, Symbol = "MODIFIED"};
         tradeRequest.TradeBot = Domain.Entities.TradeBot.FakeBreakout;
         await tradeCommand.RegisterTrade(tradeRequest);
     }

@@ -22,13 +22,9 @@ namespace Application.Features.Commands
             {
                 using (_unitOfWork.BeginTransactionAsync())
                 {
-                    var accountId = await _accountRepository.AddAsync(updateAccount);
+                    var accountId = await _accountRepository.InsertAsync(updateAccount);
 
                     await _unitOfWork.CommitAsync();
-                    if (accountId > 0)
-                    {
-                        response.Success = true;
-                    }
                 }
             }
             catch (Exception e)
