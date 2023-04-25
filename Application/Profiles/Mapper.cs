@@ -1,8 +1,8 @@
 ﻿namespace Application.Profiles
 {
-    public class Mapper<TSource, TDestination>
+    public static class Mapper<TSource, TDestination>
     {
-        public TDestination Map(TSource source)
+        public static TDestination Map(TSource source)
         {
             var destination = Activator.CreateInstance<TDestination>();
 

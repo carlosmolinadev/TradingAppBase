@@ -12,6 +12,7 @@ using System.Data.Common;
 using Template.Infrastructure.Persistance.Dapper.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var binanceApiKey = builder.Configuration.GetSection("BinanceApiKey").Value;

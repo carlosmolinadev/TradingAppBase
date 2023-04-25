@@ -2,8 +2,6 @@
 using Application.Models.Persistance;
 using Application.Responses;
 using Domain.Entities;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 
 namespace Application.Features.Queries
 {
@@ -21,13 +19,13 @@ namespace Application.Features.Queries
         public async Task<TradeResponse> GetTradeByIdAsync(int tradeId)
         {
             var response = new TradeResponse();
-            var trade = await _tradeRepository.GetByIdAsync(tradeId);
+            var trade = await _tradeRepository.SelectByIdAsync(tradeId);
             if(trade is not null)
             {
-                response.Trades =  new List<Trade>
-                {
-                    trade
-                }.AsReadOnly() ;
+                //response.Trades =  new List<Trade>
+                //{
+                //    trade
+                //}.AsReadOnly() ;
             }
             return response;
         }
@@ -37,7 +35,7 @@ namespace Application.Features.Queries
             var response = new TradeOrderResponse();
             try
             {
-                var order = await _orderRepository.GetByIdAsync(tradeId);
+                var order = await _orderRepository.SelectByIdAsync(tradeId);
                 if (order is not null)
                 {
                     response.TradeOrder = new List<TradeOrder>
@@ -54,23 +52,18 @@ namespace Application.Features.Queries
             return response;
         }
 
-        public async Task<TradeResponse> GetOrdersByTradeAsync(int tradeId, QueryFilter orderFilter)
+        public async Task<TradeResponse> GetOrdersByTradeAsync(int tradeId, QueryParameter orderFilter)
         {
             var response = new TradeResponse();
 
             try
             {
-                var trade = await _tradeRepository.GetByIdAsync(tradeId);
+                var trade = await _tradeRepository.SelectByIdAsync(tradeId);
                 if (trade != null)
                 {
-                    var tradeCondition = new QueryCondition { Column = "trade_id", Operator = "=", Value = trade.Id.ToString() };
+                    var tradeCondition = new QueryCondition("trade_id", trade.Id.ToString());
                     orderFilter.Condition.Add(tradeCondition);
-                    var orders = await _orderRepository.GetFilteredAsync(orderFilter);
-                    trade.Orders = orders;
-                    response.Trades = new List<Trade>
-                    {
-                        trade
-                    }.AsReadOnly();
+                    var orders = await _orderRepository.SelectByParameterAsync(orderFilter);
                 }
                 response.Success = true;
             }
@@ -87,15 +80,13 @@ namespace Application.Features.Queries
 
             try
             {
-                QueryFilter filter = new QueryFilter
-                {
-                    Condition = new List<QueryCondition>
-                        {
-                            new QueryCondition { Column = "activation_order", Operator = "=", Value = orderId.ToString() },
-                        }
-                };
-
-                var orders = await _orderRepository.GetFilteredAsync(filter);
+                //QueryParameter filter = new QueryParameter
+                //{
+                //    Condition = new List<QueryCondition>
+                //        {
+                //            new QueryCondition { Column = "activation_order", Operator = "=", Value = orderId.ToString() },
+                //        }
+                //};
 
                 response.Success = true;
             }

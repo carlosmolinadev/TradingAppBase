@@ -12,7 +12,7 @@ namespace Application.Models.Broker
         /// The new client order id
         /// </summary>
 
-        public OrderSide Side { get; set; }
+        public int Side { get; set; }
 
         /// <summary>
         /// The quantity of the order
@@ -37,7 +37,7 @@ namespace Application.Models.Broker
         /// <summary>
         /// The status of the order
         /// </summary>
-        public OrderStatus Status { get; set; }
+        public int Status { get; set; }
         /// <summary>
         /// The id of the order as assigned by Binance
         /// </summary>

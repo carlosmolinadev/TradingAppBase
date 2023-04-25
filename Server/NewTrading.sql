@@ -15,7 +15,7 @@ CREATE TABLE order_status(
 
 CREATE TABLE exchange(
     id int PRIMARY KEY NOT NULL,
-    name varchar(30) NOT NULL,
+    name varchar(30) NOT NULL
 );
 
 CREATE TABLE account(
@@ -55,14 +55,14 @@ CREATE TABLE trade_order(
     trade_id int NOT null
 );
 
+ALTER TABLE account ADD unique (derivate, exchange_id);
+ALTER TABLE account ADD CONSTRAINT fk_exchange_id FOREIGN KEY (exchange_id) REFERENCES exchange(id);
 ALTER TABLE trade ADD CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES account(id);
 ALTER TABLE trade_order ADD CONSTRAINT fk_trade_id FOREIGN KEY (trade_id) REFERENCES trade(id);
 ALTER TABLE trade_order ADD CONSTRAINT fk_side_id FOREIGN KEY (side_id) REFERENCES order_side(id);
 ALTER TABLE trade_order ADD CONSTRAINT fk_type_id FOREIGN KEY (type_id) REFERENCES order_type(id);
 ALTER TABLE trade_order ADD CONSTRAINT fk_status_id FOREIGN KEY (status_id) REFERENCES order_status(id);
-ALTER TABLE trade_error ADD CONSTRAINT fk_trade_id FOREIGN KEY (trade_id) REFERENCES trade(id);
-ALTER TABLE account ADD unique (derivate, exchange);
-ALTER TABLE account ADD CONSTRAINT fk_exchange_id FOREIGN KEY (exchange_id) REFERENCES trade(id);
+
 
 drop table exchange;
 drop table order_side;

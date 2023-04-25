@@ -5,6 +5,6 @@ namespace Application.Responses
 {
     public class TradeResponse : BaseResponse
     {
-        public IReadOnlyCollection<Trade> Trades { get; set; } = new Collection<Trade>();
+        public Trade Trade { get; set; }
     }
 }

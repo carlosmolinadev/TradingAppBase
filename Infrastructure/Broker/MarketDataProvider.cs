@@ -36,7 +36,7 @@ namespace Infrastructure.Broker
             BinanceMarketData?.Invoke(this, binanceDataKline);
         }
 
-        public async Task StartDataProviderAsync(string symbol, Derivate derivates, Exchange exchange)
+        public async Task StartDataProviderAsync(string symbol, string derivates, Exchange exchange)
         {
             await SetFuturesKlineData(symbol, derivates);
         }
@@ -47,7 +47,7 @@ namespace Infrastructure.Broker
             return data.Data.First().ClosePrice;
         }
 
-        private async Task SetFuturesKlineData(string symbol, Derivate derivates)
+        private async Task SetFuturesKlineData(string symbol, string derivates)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace Infrastructure.Broker
                 }
                 else
                 {
-                    if (derivates == Derivate.Futures)
+                    if (derivates == "FUTURES")
                     {
 
                         var subResult = await _socketClient.UsdFuturesStreams.SubscribeToKlineUpdatesAsync(symbol, KlineInterval.ThirtyMinutes, streamData =>
@@ -69,7 +69,7 @@ namespace Infrastructure.Broker
                             _subscriptions.TryAdd(symbol, subResult.Data);
                         }
                     }
-                    if (derivates == Derivate.Coin)
+                    if (derivates == "COIN")
                     {
                         var subResult = await _socketClient.CoinFuturesStreams.SubscribeToKlineUpdatesAsync(symbol, KlineInterval.ThirtyMinutes, streamData =>
                         {

@@ -3,14 +3,15 @@ using Application.Models.Persistance;
 
 namespace Application.Contracts.Persistance
 {
-    public interface IRepositoryAsync<T> where T : class
+    public interface IRepositoryAsync<T> where T : class 
     {
-        Task<T> GetByIdAsync(int id);
-        Task<T> GetByIdAsync(long id);
-        Task<ICollection<T>> GetAllAsync();
-        Task<ICollection<T>> GetFilteredAsync(QueryFilter filter);
-        Task<int> AddAsync(T entity);
+        Task<T> SelectByIdAsync(int id);
+        Task<ICollection<T>> SelectAllAsync();
+        Task<ICollection<T>> SelectByParameterAsync(QueryParameter queryParameter);
+        Task<T> InsertAsync(T entity);
         Task<bool> UpdateAsync(T entity);
         Task<bool> DeleteAsync(T entity);
+        Task SaveAsync<P>(string storedProcedure, P parameters);
+        Task<ICollection<U>> LoadAsync<U, P>(string storedProcedure, P parameters);
     }
 }
