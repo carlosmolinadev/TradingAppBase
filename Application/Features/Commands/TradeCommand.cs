@@ -22,15 +22,7 @@ namespace Application.Features.Commands
             _orderRepository = orderRepository;
             _unitOfWork = unitOfWork;
         }
-        private struct ExchangeParameter
-        {
-            public int ExchangeId;
-        }
 
-        public struct test
-        {
-            public string another { get; set; }
-        }
         public async Task<TradeResponse> RegisterTrade(TradeRequest tradeRequest)
         {
             var response = new TradeResponse();
@@ -39,11 +31,7 @@ namespace Application.Features.Commands
             {
                 if (tradeRequest.Trade is not null)
                 {
-                    //List<ExchangeDTO> test = new List<ExchangeDTO>();
-                    var res = await _tradeRepository.UpdateAsync(tradeRequest.Trade);
-                    //var test = await _orderRepository.LoadAsync<string, dynamic>("get_customer", null);
-                    //var queryFilter = new QueryFilter("activation_price", "=", "5", 5, 5);
-                    //var result = _orderRepository.GetFilteredAsync(queryFilter);
+
                     response.Success = true;
                 }
 

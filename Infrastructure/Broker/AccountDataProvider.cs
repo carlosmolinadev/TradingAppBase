@@ -35,13 +35,13 @@ namespace Infrastructure.Broker
             var accountUpdate = new AccountOrderUpdate
             {
                 Symbol = e.Symbol,
-                Side = (OrderSide)e.Side,
+                Side = (int)e.Side,
                 Quantity = e.Quantity,
                 Price = e.Price,
                 AveragePrice = e.AveragePrice,
                 StopPrice = e.StopPrice,
                 ExecutionType = (ExecutionType)e.ExecutionType,
-                Status = (OrderStatus)e.Status,
+                Status = (int)e.Status,
                 OrderId = e.OrderId,
                 QuantityOfLastFilledTrade = e.QuantityOfLastFilledTrade,
                 AccumulatedQuantityOfFilledTrades = e.AccumulatedQuantityOfFilledTrades,

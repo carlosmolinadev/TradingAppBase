@@ -2,8 +2,6 @@
 using Application.Models.Persistance;
 using Application.Responses;
 using Domain.Entities;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 
 namespace Application.Features.Queries
 {
@@ -24,10 +22,10 @@ namespace Application.Features.Queries
             var trade = await _tradeRepository.SelectByIdAsync(tradeId);
             if(trade is not null)
             {
-                response.Trades =  new List<Trade>
-                {
-                    trade
-                }.AsReadOnly() ;
+                //response.Trades =  new List<Trade>
+                //{
+                //    trade
+                //}.AsReadOnly() ;
             }
             return response;
         }
@@ -54,7 +52,7 @@ namespace Application.Features.Queries
             return response;
         }
 
-        public async Task<TradeResponse> GetOrdersByTradeAsync(int tradeId, QueryFilter orderFilter)
+        public async Task<TradeResponse> GetOrdersByTradeAsync(int tradeId, QueryParameter orderFilter)
         {
             var response = new TradeResponse();
 
@@ -63,9 +61,9 @@ namespace Application.Features.Queries
                 var trade = await _tradeRepository.SelectByIdAsync(tradeId);
                 if (trade != null)
                 {
-                    var tradeCondition = new QueryCondition { Column = "trade_id", Operator = "=", Value = trade.Id.ToString() };
+                    var tradeCondition = new QueryCondition("trade_id", trade.Id.ToString());
                     orderFilter.Condition.Add(tradeCondition);
-                    var orders = await _orderRepository.SelectFilteredAsync(orderFilter);
+                    var orders = await _orderRepository.SelectByParameterAsync(orderFilter);
                 }
                 response.Success = true;
             }
@@ -82,15 +80,13 @@ namespace Application.Features.Queries
 
             try
             {
-                QueryFilter filter = new QueryFilter
-                {
-                    Condition = new List<QueryCondition>
-                        {
-                            new QueryCondition { Column = "activation_order", Operator = "=", Value = orderId.ToString() },
-                        }
-                };
-
-                var orders = await _orderRepository.SelectFilteredAsync(filter);
+                //QueryParameter filter = new QueryParameter
+                //{
+                //    Condition = new List<QueryCondition>
+                //        {
+                //            new QueryCondition { Column = "activation_order", Operator = "=", Value = orderId.ToString() },
+                //        }
+                //};
 
                 response.Success = true;
             }

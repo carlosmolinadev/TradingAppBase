@@ -18,9 +18,9 @@ namespace Infrastructure.Broker
         public async Task<TradeOrderResponse> CreateOrder(Exchange exchange, string derivate, OrderType orderType, OrderParameter orderParameter)
         {
             var response = new TradeOrderResponse();
-            switch (exchange)
+            switch (exchange.Value)
             {
-                case Exchange.Binance:
+                case "BINANCE":
                     if (derivate == "FUTURES")
                     {
                         response = await CreateFuturesBinanceOrder(orderType, orderParameter);
@@ -29,10 +29,6 @@ namespace Infrastructure.Broker
                     {
                         response = await CreateCoinBinanceOrder(orderType, orderParameter);
                     }
-                    break;
-                case Exchange.BingX:
-                    break;
-                case Exchange.Okex:
                     break;
                 default:
                     break;
@@ -47,8 +43,8 @@ namespace Infrastructure.Broker
 
             var orderData = await _binanceClient.UsdFuturesApi.Trading.PlaceOrderAsync(
             orderParameter.Symbol,
-            (Binance.Net.Enums.OrderSide)orderParameter.Side,
-            type: (FuturesOrderType)orderType,
+            (Binance.Net.Enums.OrderSide)orderParameter.Side.Id,
+            type: (FuturesOrderType)orderType.Id,
             orderParameter.Quantity,
             stopPrice: orderParameter.TradePrice,
             timeInForce: TimeInForce.GoodTillCanceled
@@ -67,8 +63,8 @@ namespace Infrastructure.Broker
 
             var orderData = await _binanceClient.CoinFuturesApi.Trading.PlaceOrderAsync(
             orderParameter.Symbol,
-            (Binance.Net.Enums.OrderSide)orderParameter.Side,
-            type: (FuturesOrderType)orderType,
+            (Binance.Net.Enums.OrderSide)orderParameter.Side.Id,
+            type: (FuturesOrderType)orderType.Id,
             orderParameter.Quantity,
             stopPrice: orderParameter.TradePrice,
             timeInForce: TimeInForce.GoodTillCanceled

@@ -12,9 +12,9 @@
         public DateTime ClosedDate { get; set; }
         public long? ExchangeTransaction { get; set; }
         public int? ParentId { get ; set; }
-        public OrderSide SideId { get; set; }
-        public OrderType TypeId { get; set; }
-        public OrderStatus StatusId { get; set; }
+        public int SideId { get; set; }
+        public int TypeId { get; set; }
+        public int StatusId { get; set; }
         public int TradeId { get; set; }
     }
 }

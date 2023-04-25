@@ -7,7 +7,7 @@ namespace Application.Contracts.Persistance
     {
         Task<T> SelectByIdAsync(int id);
         Task<ICollection<T>> SelectAllAsync();
-        Task<ICollection<T>> SelectFilteredAsync(QueryFilter filter);
+        Task<ICollection<T>> SelectByParameterAsync(QueryParameter queryParameter);
         Task<T> InsertAsync(T entity);
         Task<bool> UpdateAsync(T entity);
         Task<bool> DeleteAsync(T entity);

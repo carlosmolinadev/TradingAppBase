@@ -16,7 +16,6 @@ namespace Infrastructure.Persistance.Repositories
         private readonly string _tableName;
         private readonly IUnitOfWork _unitOfWork;
         
-
         public RepositoryAsync(IUnitOfWork unitOfWork)
         {
             var tableAttr = typeof(T).GetCustomAttribute<TableAttribute>();
@@ -36,7 +35,7 @@ namespace Infrastructure.Persistance.Repositories
         {
             try
             {
-                var sql = ConvertSql($"SELECT * FROM {_tableName} WHERE id = @id");
+                var sql = $"SELECT * FROM {_tableName} WHERE id = @id";
                 return await _unitOfWork.Connection.QueryFirstOrDefaultAsync<T>(
                     sql,
                     new { id });
@@ -61,17 +60,17 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        public async Task<ICollection<T>> SelectFilteredAsync(QueryFilter filter)
+        public async Task<ICollection<T>> SelectByParameterAsync(QueryParameter queryParameter)
         {
             // Build the SQL query
             var sql = ConvertSql($"SELECT * FROM {_tableName}");
             var whereClauses = new List<string>();
             var parameters = new DynamicParameters();
-            if (filter.Condition.Count > 0)
+            if (queryParameter.Condition.Count > 0)
             {
                 // Add WHERE clauses for each filter condition
                 var i = 0;
-                foreach (var condition in filter.Condition)
+                foreach (var condition in queryParameter.Condition)
                 {
                     whereClauses.Add($"{ToSnakeCase(condition.Column)} {condition.Operator} @p{i}");
                     parameters.Add($"p{i}", condition.Value);
@@ -82,21 +81,20 @@ namespace Infrastructure.Persistance.Repositories
             {
                 sql += $" WHERE {string.Join(" AND ", whereClauses)}";
             }
-            if (filter.OrderByColumn.Count > 0)
+            if (queryParameter.OrderByColumn.Count > 0)
             {
                 // Add ORDER BY clause for each OrderByColumn
-                var orderByClauses = filter.OrderByColumn.Select(x => $"{x}");
+                var orderByClauses = queryParameter.OrderByColumn.Select(x => $"{x}");
                 sql += $" ORDER BY {string.Join(", ", orderByClauses)}";
             }
-            if (filter.Limit.HasValue)
+            if (queryParameter.Limit.HasValue)
             {
-                sql += $" LIMIT {filter.Limit}";
+                sql += $" LIMIT {queryParameter.Limit}";
                 // Add LIMIT and OFFSET clauses for paging
-                if (filter.Offset.HasValue)
+                if (queryParameter.Offset.HasValue)
                 {
-                    sql += $" OFFSET {filter.Offset}";
+                    sql += $" OFFSET {queryParameter.Offset}";
                 }
-                 
             }
 
             // Execute the query and return the results
@@ -193,7 +191,6 @@ namespace Infrastructure.Persistance.Repositories
                     attributeClauses.Add($"{ToSnakeCase(properties[i].Name)} := @{properties[i].Name}");
                     p.Add(properties[i].Name, properties[i].GetValue(parameters));
                 }
-
                 storedProcedure += $"({string.Join(", ", attributeClauses)})";
             }
 
