@@ -1,4 +1,5 @@
 ﻿using Application.Models.TradingSystem;
+using Application.Requests;
 using Application.Responses;
 using Domain.Entities;
 using System;
@@ -9,9 +10,11 @@ using System.Threading.Tasks;
 
 namespace Application.Contracts.TradingSystem
 {
-    public  interface ITradeManager
+    public interface ITradeManager
     {
-        Task<TradeResponse> SetupTrade();
-        
+
+        public bool AddTrade(TradeRequest tradeRequest);
+
+
     }
 }

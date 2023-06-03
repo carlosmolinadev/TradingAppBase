@@ -10,6 +10,5 @@ namespace Application.Requests
     public class TradeRequest
     {
         public Trade? Trade { get; set; }
-        public TradeBot TradeBot { get; set; }
     }
 }

@@ -6,8 +6,8 @@ namespace Application.Features.Queries
 {
     public class AccountQuery 
     {
-        private readonly IRepositoryAsync<Account> _accountRepo;
-        public AccountQuery(IRepositoryAsync<Account> accountRepo)
+        private readonly IRepositoryAsync<@int> _accountRepo;
+        public AccountQuery(IRepositoryAsync<@int> accountRepo)
         {
             _accountRepo = accountRepo;
         }

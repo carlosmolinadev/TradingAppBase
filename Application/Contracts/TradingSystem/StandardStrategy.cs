@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Profiles.DTOs
+namespace Application.Contracts.TradingSystem
 {
-    public class StandardParameter
+    public class StandardStrategy : TradeStrategy
     {
-        IList<OrderParameter> orderParameters;  
+        
     }
 }

@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Entities
+namespace Application.Contracts.TradingSystem
 {
-    public class OrderSide
+    public class FakeBreakoutStrategy : TradeStrategy
     {
-        public int Id { get; set; }
-        public string SideValue { get; set; }
     }
 }

@@ -1,9 +1,13 @@
 using Application.Contracts.Broker;
 using Application.Contracts.Persistance;
+using Application.Contracts.TradingSystem;
 using Application.Features.Commands;
+using Application.Features.Queries;
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
+using Dapper;
+using Domain.Entities;
 using Infrastructure.Broker;
 using Infrastructure.Persistance.Repositories;
 using MudBlazor.Services;
@@ -12,7 +16,7 @@ using System.Data.Common;
 using Template.Infrastructure.Persistance.Dapper.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
-Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var binanceApiKey = builder.Configuration.GetSection("BinanceApiKey").Value;
@@ -29,7 +33,9 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<DbConnection>((sp) => new NpgsqlConnection(connectionString));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<TradeCommand>();
-
+builder.Services.AddScoped<TradeQuery>();
+builder.Services.AddScoped<OrderQuery>();
+builder.Services.AddScoped<ITradeManager, TradeManager>();
 
 builder.Services.AddTransient(typeof(IRepositoryAsync<>), typeof(RepositoryAsync<>));
 

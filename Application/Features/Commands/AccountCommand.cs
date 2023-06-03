@@ -1,28 +1,27 @@
 ﻿using Application.Contracts.Persistance;
 using Application.Responses;
 using Domain.Entities;
-using System.Diagnostics;
 
 namespace Application.Features.Commands
 {
     public class AccountCommand 
     {
-        private readonly IRepositoryAsync<Account> _accountRepository;
+        private readonly IRepositoryAsync<@int> _accountRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public AccountCommand(IRepositoryAsync<Account> accountRepository, IUnitOfWork unitOfWork)
+        public AccountCommand(IRepositoryAsync<@int> accountRepository, IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
             _accountRepository = accountRepository;
         }
 
-        public async Task<AccountResponse> CreateAccount(Account updateAccount)
+        public async Task<AccountResponse> CreateAccount(@int updateAccount)
         {
             var response = new AccountResponse();
             try
             {
                 using (_unitOfWork.BeginTransactionAsync())
                 {
-                    var accountId = await _accountRepository.InsertAsync(updateAccount);
+                    var accountId = await _accountRepository.AddAsync(updateAccount);
 
                     await _unitOfWork.CommitAsync();
                 }
@@ -34,7 +33,7 @@ namespace Application.Features.Commands
             return response;
         }
 
-        public async Task<AccountResponse> UpdateAccount(int accountId, Account updateAccount)
+        public async Task<AccountResponse> UpdateAccount(int accountId, @int updateAccount)
         {
             var response = new AccountResponse();
             try
@@ -52,7 +51,7 @@ namespace Application.Features.Commands
             return response;
         }
 
-        public async Task<AccountResponse> DeleteAccount(Account updateAccount)
+        public async Task<AccountResponse> DeleteAccount(@int updateAccount)
         {
             var response = new AccountResponse();
             try
