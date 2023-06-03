@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class OrderSide
+    public class TradeStrategy
     {
         public int Id { get; set; }
-        public string SideValue { get; set; }
+        public string StrategyValue { get; set; }
     }
 }

@@ -1,16 +1,18 @@
 ﻿using Application.Contracts.Persistance;
 using Application.Models.Persistance;
 using Dapper;
+using Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
+using Template.Infrastructure.Persistance.Dapper.Repositories;
 
 
 namespace Infrastructure.Persistance.Repositories
 {
-    
     public class RepositoryAsync<T> : IRepositoryAsync<T> where T : class
     {
         private readonly string _tableName;
@@ -25,20 +27,21 @@ namespace Infrastructure.Persistance.Repositories
             }
             else
             {
-                _tableName = ToSnakeCase(typeof(T).Name);
+                _tableName = typeof(T).Name;
             }
 
             _unitOfWork = unitOfWork;
         }
 
-        public virtual async Task<T> SelectByIdAsync(int id)
+        public virtual async Task<T> SelectByIdAsync<Tid>(Tid id)
         {
             try
             {
                 var sql = $"SELECT * FROM {_tableName} WHERE id = @id";
-                return await _unitOfWork.Connection.QueryFirstOrDefaultAsync<T>(
+                var result = await _unitOfWork.Connection.QueryFirstAsync<T>(
                     sql,
                     new { id });
+                return result;
             }
             catch (Exception)
             {
@@ -46,13 +49,12 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        public virtual async Task<ICollection<T>> SelectAllAsync()
+        public virtual async Task<IEnumerable<T>> SelectAllAsync()
         {
             try
             {
                 var sql = ConvertSql($"SELECT * FROM {_tableName}");
-                var result = await _unitOfWork.Connection.QueryAsync<T>(sql);
-                return result.ToList();
+                return await _unitOfWork.Connection.QueryAsync<T>(sql);
             }
             catch (Exception)
             {
@@ -60,7 +62,7 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        public async Task<ICollection<T>> SelectByParameterAsync(QueryParameter queryParameter)
+        public async Task<IEnumerable<T>> SelectByParameterAsync(QueryParameter queryParameter)
         {
             // Build the SQL query
             var sql = ConvertSql($"SELECT * FROM {_tableName}");
@@ -98,11 +100,10 @@ namespace Infrastructure.Persistance.Repositories
             }
 
             // Execute the query and return the results
-            var result = await _unitOfWork.Connection.QueryAsync<T>(sql, parameters);
-            return result.ToList();
+            return await _unitOfWork.Connection.QueryAsync<T>(sql, parameters);
         }
 
-        public virtual async Task<T> InsertAsync(T entity)
+        public virtual async Task<T> AddAsync(T entity)
         {
             try
             {
@@ -130,12 +131,16 @@ namespace Infrastructure.Persistance.Repositories
         {
             try
             {
-                var primaryKey = GetPrimaryKeyInfo();
-                var updates = string.Join(',', GetPropertyInfo().Select(c => $"{ToSnakeCase(c.Name)} = @{c.Name}"));
+                var properties = GetPropertyInfo();
+                var primaryKeyClauses = string.Join(" AND ", properties.Select(c => $"{ToSnakeCase(c.Name)} = @{c.Name}"));
+                var updates = string.Join(',', GetPropertyInfo().Where(p => !p.CustomAttributes
+                                                                .Any(a => a.AttributeType == typeof(KeyAttribute)))
+                                                                .Select(c => $"{ToSnakeCase(c.Name)} = @{c.Name}"));
+
                 var sql = $"UPDATE {_tableName} SET {updates} WHERE id = @id";
-                if (primaryKey is not null)
+                if (!string.IsNullOrEmpty(primaryKeyClauses))
                 {
-                    sql = $"UPDATE {_tableName} SET {updates} WHERE {ToSnakeCase(primaryKey.Name)} = @{primaryKey.Name}";
+                    sql = $"UPDATE {_tableName} SET {updates} WHERE {primaryKeyClauses}";
                 }
 
                 return await _unitOfWork.Connection.ExecuteAsync(sql, entity) > 0;
@@ -150,11 +155,13 @@ namespace Infrastructure.Persistance.Repositories
         {
             try
             {
-                var primaryKey = GetPrimaryKeyInfo();
+                var primaryKeyClauses = string.Join(" AND ", GetPrimaryKeyInfo().Select(c => $"{ToSnakeCase(c.Name)} = @{c.Name}"));
+
                 var sql = $"DELETE FROM {_tableName} WHERE id = @id";
-                if (primaryKey != null)
+
+                if (!string.IsNullOrEmpty(primaryKeyClauses))
                 {
-                    sql = $"DELETE FROM {_tableName} WHERE {ToSnakeCase(primaryKey.Name)} = @{primaryKey.Name}";
+                    sql = $"DELETE FROM {_tableName} WHERE {primaryKeyClauses}";
                 }
 
                 return await _unitOfWork.Connection.ExecuteAsync(sql, entity) > 0;
@@ -165,10 +172,9 @@ namespace Infrastructure.Persistance.Repositories
             }
         }
 
-        public virtual async Task<ICollection<U>> LoadAsync<U, P>(string storedProcedure, P parameters)
+        public virtual async Task<IEnumerable<U>> LoadAsync<U, P>(string storedProcedure, P parameters)
         {
-            Type type = typeof(U);
-            FieldInfo[] fields = type.GetFields();
+            FieldInfo[] fields = typeof(U).GetFields();
             var p = new DynamicParameters();
 
             if (fields.Length > 0)
@@ -196,8 +202,7 @@ namespace Infrastructure.Persistance.Repositories
 
             try
             {
-                var rows = await _unitOfWork.Connection.QueryAsync<U>(storedProcedure, p);
-                return rows.ToList();
+                return await _unitOfWork.Connection.QueryAsync<U>(storedProcedure, p);
             }
             catch (Exception)
             {
@@ -231,8 +236,7 @@ namespace Infrastructure.Persistance.Repositories
 
         private IEnumerable<PropertyInfo> GetPropertyInfo()
         {
-            return typeof(T)
-                .GetProperties().Where(p => p.Name != "Id" && !p.CustomAttributes.Any(a => a.AttributeType == typeof(NotMappedAttribute)));
+            return typeof(T).GetProperties().Where(p => p.Name != "Id" && p.CustomAttributes.Any(a => a.AttributeType == typeof(NotMappedAttribute)));
         }
 
         private static string ToSnakeCase(string input)
@@ -240,16 +244,15 @@ namespace Infrastructure.Persistance.Repositories
             return string.Concat(input.Select((c, i) => i > 0 && char.IsUpper(c) ? "_" + c.ToString() : c.ToString())).ToLower();
         }
 
-        private PropertyInfo? GetPrimaryKeyInfo()
+        private IEnumerable<PropertyInfo> GetPrimaryKeyInfo()
         {
-            return typeof(T)
-                .GetProperties().Where(p => p.CustomAttributes.Any(a => a.AttributeType == typeof(KeyAttribute))).FirstOrDefault();
+            return typeof(T).GetProperties().Where(p => p.CustomAttributes.Any(a => a.AttributeType == typeof(KeyAttribute)));
         }
 
         public string ConvertSql(string sql)
         {
             // Get the properties of the class
-            var properties = typeof(T).GetProperties().Where(p => !p.CustomAttributes.Any(a => a.AttributeType == typeof(NotMappedAttribute)));
+            var properties = typeof(T).GetProperties().Where(p => !p.GetMethod.IsVirtual);
 
             // Build the list of columns
             var columns = new List<string>();
@@ -332,4 +335,30 @@ namespace Infrastructure.Persistance.Repositories
 //    {
 //        throw;
 //    }
+//}
+
+//var sql = @"select * from trade; 
+//                            select * from strategy where id = @id;
+//                            select * from account where id = @id;";
+//var reader = await _unitOfWork.Connection.QueryMultipleAsync(sql, param: new { id });
+//var trade = (await reader.ReadAsync<Trade>()).Single();
+//trade.Strategy = (await reader.ReadAsync<TradeStrategy>()).Single();
+//trade.Account = (await reader.ReadAsync<Account>()).Single();
+
+//try
+//{
+//    var result = await _unitOfWork.Connection.QueryAsync<Trade, Account, Trade>(
+//    storedProcedure,
+//    param: p,
+//    map: (u, c) => {
+//        u.Account = c;
+//        return u;
+//    },
+//    splitOn: "id"
+//    );
+//    return null;
+//}
+//catch (Exception)
+//{
+//    throw;
 //}

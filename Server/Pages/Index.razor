@@ -1,19 +1,39 @@
 ﻿@page "/"
 @using Application.Requests;
+@using Domain.Entities;
 @inject TradeCommand tradeCommand
-
-
+@inject TradeQuery tradeQuery
+@inject OrderQuery _orderQuery
 
 <TradingViewWidget />
+
+@*<MudSelect @bind-Value=(Domain.Entities.OrderType)_orderTypeSelected Label="Select drink" HelperText="Enum" OpenIcon="@Icons.Material.Filled.LocalDrink" AdornmentColor="Color.Secondary">
+    @foreach (Domain.Entities.OrderType item in orderType)
+    {
+        <MudSelectItem Value="@(Domain.Entities.OrderType)item">@item.Value</MudSelectItem>
+    }
+</MudSelect>*@
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="ClickTest">Primary</MudButton>
 
 @code{
+    private IList<OrderType> orderType = new List<OrderType>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //orderType = (await _orderQuery.GetAllOrderTypes()).ToList();
+
+            StateHasChanged();
+        }
+    }
+
     private async void ClickTest()
     {
         var tradeRequest = new TradeRequest();
-        tradeRequest.Trade = new Domain.Entities.Trade() { AccountId = 1, Attempt = 0, Id = 6, LateEntry = 1, PercentageEntry = false, Symbol = "MODIFIED"};
-        tradeRequest.TradeBot = Domain.Entities.TradeBot.FakeBreakout;
+        //tradeRequest.Trade = new Domain.Entities.Trade(1,0,true,3,true,"BTCUSD", 1, 1);
         await tradeCommand.RegisterTrade(tradeRequest);
+
     }
 }

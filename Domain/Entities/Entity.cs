@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class OrderSide
+    public abstract class Entity<Tid>
     {
-        public int Id { get; set; }
-        public string SideValue { get; set; }
+        public Tid Id { get; set; }
     }
 }

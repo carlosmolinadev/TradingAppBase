@@ -8,9 +8,9 @@ namespace Domain.Entities
 {
     public class Exchange
     {
-        public Exchange(string value, string displayName) { Value = value; DisplayName = displayName; }
+        public Exchange(string value, string displayName) { ExchangeName = value; DisplayName = displayName; }
         public int Id { get; set; }
-        public string Value { get; set; }
+        public string ExchangeName { get; set; }
         public string DisplayName { get; set; }
     }
 }
